@@ -359,6 +359,7 @@ class Roo::Base
         end
       else
         clean_sheet_if_need(options)
+        include_row_col = check_include_row_col(options)
         search_or_set_header(options)
         headers = @headers ||
                   Hash[(first_column..last_column).map do |col|
@@ -366,12 +367,20 @@ class Roo::Base
                   end]
 
         @header_line.upto(last_row) do |line|
-          yield(Hash[headers.map { |k, v| [k, cell(line, v)] }])
+          data = Hash[headers.map { |k, v| [k, cell(line, v)] }]
+          data_with_row_col = Hash[headers.map { |k, v| [k, {value: cell(line, v), row: line, col: v}] }]
+          yield include_row_col ? data_with_row_col : data
         end
       end
     else
       to_enum(:each, options)
     end
+  end
+
+  def check_include_row_col(options)
+    return false unless options[:include_row_col]
+    options.delete(:include_row_col)
+    return true
   end
 
   def parse(options = {})
